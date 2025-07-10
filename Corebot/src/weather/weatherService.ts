@@ -201,46 +201,6 @@ export class WeatherService {
                     advice.push('\n Scarf\n');
                 }
             }
-
-            
-            // // Weather condition-based advice
-            // if (description.includes('rain') || description.includes('drizzle')) {
-            //     advice.push('\n Umbrella or raincoat\n');
-            //     advice.push('\n Waterproof shoes\n');
-            // }
-            
-            // if (description.includes('snow')) {
-            //     advice.push('\n Non-slip shoes\n');
-            //     advice.push('\n Thick gloves\n');
-            //     advice.push('\n Warm scarf\n');
-            // }
-            
-            // if (description.includes('thunderstorm')) {
-            //     advice.push('\n Avoid going outside (thunderstorm)\n');
-            //     advice.push('\n Sturdy umbrella\n');
-            // }
-            
-            // // Humidity-based advice
-            // if (humidity > 80) {
-            //     advice.push('\n Breathable clothing\n');
-            //     advice.push('\n Towel for sweat\n');
-            // }
-            
-            // // Check weather forecast for today and tomorrow
-            // let hasRainToday = false;
-            // let hasRainTomorrow = false;
-            
-            // if (todayForecast && todayForecast.description.toLowerCase().includes('rain')) {
-            //     hasRainToday = true;
-            //     advice.push('\n Umbrella for today\n');
-            // }
-            
-            // if (forecast[1] && forecast[1].description.toLowerCase().includes('rain')) {
-            //     hasRainTomorrow = true;
-            //     advice.push('\n Prepare umbrella for tomorrow\n');
-            // }
-            
-            
             return {
                 advice: [...new Set(advice)] 
             };

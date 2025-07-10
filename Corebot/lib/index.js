@@ -52,6 +52,7 @@ const weatherService_1 = require("./weather/weatherService");
 const userProfileService_1 = require("./userProfile/userProfileService");
 const restify_cors_middleware2_1 = __importDefault(require("restify-cors-middleware2"));
 const sendDailySuggestion_1 = require("./utils/sendDailySuggestion");
+const suggestionService_1 = require("./suggestion/suggestionService");
 // Read environment variables from .env file
 const ENV_FILE = path.join(__dirname, '..', '.env');
 (0, dotenv_1.config)({ path: ENV_FILE });
@@ -128,12 +129,9 @@ cron.schedule('* 9 * * *', () => __awaiter(void 0, void 0, void 0, function* () 
 }), {
     timezone: "Asia/Ho_Chi_Minh"
 });
-// Listen for incoming requests.
 server.post('/api/messages', (req, res, next) => {
-    // Route received a request to adapter for processing
     adapter.process(req, res, (context) => __awaiter(void 0, void 0, void 0, function* () { return yield bot.run(context); }));
 });
-// Listen for incoming notifications and send proactive messages to users.
 server.get('/api/notify', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield (0, sendDailySuggestion_1.sendDailySuggestion)(weatherService, userProfileService, adapter, conversationReferences);
@@ -150,56 +148,21 @@ server.get('/api/notify', (req, res, next) => __awaiter(void 0, void 0, void 0, 
         res.end();
     }
 }));
+const suggestionService = new suggestionService_1.SuggestionService();
 server.post('/api/suggestions', (req, res, next) => {
     const suggestionId = req.body.id;
     const suggestionText = req.body.message;
     req.accepts('application/json');
-    switch (suggestionId) {
-        case '35':
-            suggestion.setMaxTempGreaterThan35(suggestionText);
-            break;
-        case '30':
-            suggestion.setMaxTempGreaterThan30(suggestionText);
-            break;
-        case '25':
-            suggestion.setMaxTempGreaterThan25(suggestionText);
-            break;
-        case '20':
-            suggestion.setMaxTempGreaterThan20(suggestionText);
-            break;
-        default:
-            res.send(400, { error: 'Invalid suggestion ID' });
-            return next();
+    try {
+        suggestionService.setSuggestion(suggestionId, suggestionText, suggestion);
+    }
+    catch (error) {
+        console.error('Error setting suggestion:', error);
+        res.send(400, { error: error.message });
+        return next();
     }
     console.log(suggestion);
     res.send(200, { message: 'Suggestion updated successfully' });
-    return next();
-});
-// Debug endpoint để kiểm tra conversation references
-server.get('/api/debug/conversation-references', (req, res, next) => {
-    try {
-        const references = Object.keys(conversationReferences).map(key => {
-            var _a, _b, _c;
-            const ref = conversationReferences[key];
-            return {
-                key: key,
-                userId: (_a = ref === null || ref === void 0 ? void 0 : ref.user) === null || _a === void 0 ? void 0 : _a.id,
-                userName: (_b = ref === null || ref === void 0 ? void 0 : ref.user) === null || _b === void 0 ? void 0 : _b.name,
-                conversationId: (_c = ref === null || ref === void 0 ? void 0 : ref.conversation) === null || _c === void 0 ? void 0 : _c.id,
-                channelId: ref === null || ref === void 0 ? void 0 : ref.channelId,
-                serviceUrl: ref === null || ref === void 0 ? void 0 : ref.serviceUrl,
-                timestamp: new Date().toISOString()
-            };
-        });
-        res.send(200, {
-            totalReferences: references.length,
-            currentTime: new Date().toISOString(),
-            references: references
-        });
-    }
-    catch (error) {
-        res.send(500, { error: error.message });
-    }
     return next();
 });
 //# sourceMappingURL=index.js.map

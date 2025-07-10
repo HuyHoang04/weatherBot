@@ -137,98 +137,70 @@ class WeatherService {
                 const forecast = yield this.getWeatherForecast(lat, lon);
                 const advice = [];
                 const temperature = currentWeather.temperature;
-                // const description = currentWeather.description.toLowerCase();
-                // const humidity = currentWeather.humidity;
                 // Lấy thông tin từ dự báo hôm nay
                 const todayForecast = forecast[0];
                 const maxTemp = todayForecast ? todayForecast.maxTemp : temperature;
-                // const minTemp = todayForecast ? todayForecast.minTemp : temperature;
-                // Temperature-based advice
-                if (maxTemp > 35) {
-                    const customSuggestion = this.suggestion.getMaxTempGreaterThan35();
-                    if (customSuggestion && customSuggestion.trim()) {
-                        advice.push(`\n ${customSuggestion}\n`);
-                    }
-                    else {
-                        advice.push('\n Sunglasses (very hot sun)\n');
-                        advice.push('\n SPF 50+ sunscreen\n');
-                        advice.push('\n Lots of water (bring extra bottles)\n');
-                        advice.push('\n Light-colored, thin clothing\n');
-                        advice.push('\n Sun hat\n');
-                    }
+                switch (true) {
+                    case (maxTemp > 35):
+                        {
+                            const customSuggestion = this.suggestion.maxTempGreaterThan35;
+                            if (customSuggestion && customSuggestion.trim()) {
+                                advice.push(`\n ${customSuggestion}\n`);
+                            }
+                            else {
+                                advice.push('\n Sunglasses (very hot sun)\n');
+                                advice.push('\n SPF 50+ sunscreen\n');
+                                advice.push('\n Lots of water (bring extra bottles)\n');
+                                advice.push('\n Light-colored, thin clothing\n');
+                                advice.push('\n Sun hat\n');
+                            }
+                            break;
+                        }
+                    case (maxTemp > 30):
+                        {
+                            const customSuggestion = this.suggestion.maxTempGreaterThan30;
+                            if (customSuggestion && customSuggestion.trim()) {
+                                advice.push(`\n ${customSuggestion}\n`);
+                            }
+                            else {
+                                advice.push('\n Sunglasses\n');
+                                advice.push('\n SPF 50+ sunscreen\n');
+                                advice.push('\n Plenty of water\n');
+                                advice.push('\n Light, breathable clothing\n');
+                            }
+                        }
+                    case (maxTemp > 25):
+                        {
+                            const customSuggestion = this.suggestion.maxTempGreaterThan25;
+                            if (customSuggestion && customSuggestion.trim()) {
+                                advice.push(`\n ${customSuggestion}\n`);
+                            }
+                            else {
+                                advice.push('\n Sunglasses\n');
+                                advice.push('\n SPF 30+ sunscreen\n');
+                                advice.push('\n Water bottle\n');
+                                advice.push('\n Light clothing\n');
+                            }
+                        }
+                    case (maxTemp > 20):
+                        {
+                            const customSuggestion = this.suggestion.maxTempGreaterThan20;
+                            if (customSuggestion && customSuggestion.trim()) {
+                                advice.push(`\n ${customSuggestion}\n`);
+                            }
+                            else {
+                                advice.push('\n Light jacket\n');
+                                advice.push('\n Water bottle');
+                            }
+                        }
+                    default:
+                        {
+                            advice.push('\n Warm clothing\n');
+                            advice.push('\n Gloves\n');
+                            advice.push('\n Scarf\n');
+                        }
                 }
-                else if (maxTemp > 30) {
-                    const customSuggestion = this.suggestion.getMaxTempGreaterThan30();
-                    if (customSuggestion && customSuggestion.trim()) {
-                        advice.push(`\n ${customSuggestion}\n`);
-                    }
-                    else {
-                        advice.push('\n Sunglasses\n');
-                        advice.push('\n SPF 50+ sunscreen\n');
-                        advice.push('\n Plenty of water\n');
-                        advice.push('\n Light, breathable clothing\n');
-                    }
-                }
-                else if (maxTemp > 25) {
-                    const customSuggestion = this.suggestion.getMaxTempGreaterThan25();
-                    if (customSuggestion && customSuggestion.trim()) {
-                        advice.push(`\n ${customSuggestion}\n`);
-                    }
-                    else {
-                        advice.push('\n Sunglasses\n');
-                        advice.push('\n SPF 30+ sunscreen\n');
-                        advice.push('\n Water bottle\n');
-                        advice.push('\n Light clothing\n');
-                    }
-                }
-                else if (maxTemp > 20) {
-                    const customSuggestion = this.suggestion.getMaxTempGreaterThan20();
-                    if (customSuggestion && customSuggestion.trim()) {
-                        advice.push(`\n ${customSuggestion}\n`);
-                    }
-                    else {
-                        advice.push('\n Light jacket\n');
-                        advice.push('\n Water bottle');
-                    }
-                }
-                else {
-                    advice.push('\n Warm clothing\n');
-                    advice.push('\n Gloves\n');
-                    advice.push('\n Scarf\n');
-                }
-                // // Weather condition-based advice
-                // if (description.includes('rain') || description.includes('drizzle')) {
-                //     advice.push('\n Umbrella or raincoat\n');
-                //     advice.push('\n Waterproof shoes\n');
-                // }
-                // if (description.includes('snow')) {
-                //     advice.push('\n Non-slip shoes\n');
-                //     advice.push('\n Thick gloves\n');
-                //     advice.push('\n Warm scarf\n');
-                // }
-                // if (description.includes('thunderstorm')) {
-                //     advice.push('\n Avoid going outside (thunderstorm)\n');
-                //     advice.push('\n Sturdy umbrella\n');
-                // }
-                // // Humidity-based advice
-                // if (humidity > 80) {
-                //     advice.push('\n Breathable clothing\n');
-                //     advice.push('\n Towel for sweat\n');
-                // }
-                // // Check weather forecast for today and tomorrow
-                // let hasRainToday = false;
-                // let hasRainTomorrow = false;
-                // if (todayForecast && todayForecast.description.toLowerCase().includes('rain')) {
-                //     hasRainToday = true;
-                //     advice.push('\n Umbrella for today\n');
-                // }
-                // if (forecast[1] && forecast[1].description.toLowerCase().includes('rain')) {
-                //     hasRainTomorrow = true;
-                //     advice.push('\n Prepare umbrella for tomorrow\n');
-                // }
                 return {
-                    currentWeather,
-                    forecast: todayForecast,
                     advice: [...new Set(advice)]
                 };
             }

@@ -1,11 +1,10 @@
-import { Suggestion } from "./suggestion"
-
-export class SuggestionService {
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SuggestionService = void 0;
+class SuggestionService {
     constructor() {
     }
- 
-    setSuggestion(suggestionId: string, suggestionText: string ,suggestion : Suggestion): void {
+    setSuggestion(suggestionId, suggestionText, suggestion) {
         switch (suggestionId) {
             case '35':
                 suggestion.maxTempGreaterThan35 = suggestionText;
@@ -24,4 +23,5 @@ export class SuggestionService {
         }
     }
 }
-
+exports.SuggestionService = SuggestionService;
+//# sourceMappingURL=suggestionService.js.map
