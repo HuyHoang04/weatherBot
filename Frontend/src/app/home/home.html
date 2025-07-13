@@ -1,6 +1,17 @@
+<!-- Header -->
+  <div class="text-center mb-4">
+    <h1 class="h2"> Gợi ý trang phục theo nhiệt độ</h1>
+  </div>
+  
+  <!-- Nút thêm danh sách -->
+  <div class="text-center mb-4">
+    <button class="btn btn-success" (click)="addNewTemperatureList()">
+      Add New List
+    </button>
+  </div>
 <div class="px-4 py-5 my-5">
 @for (group of list; let i = $index; track group) {
-  <div class="box-container position-relative">
+  <div class="box-container">
     <p class="h2 text-center">{{ group.title }}</p>
 
     <div
@@ -17,11 +28,77 @@
       }
     </div>
 
-    <button
-      class="btn btn-sm btn-secondary mb-2 position-absolute bottom-(-100) end-0 m-2"
-    >
-      + add more
-    </button>
+    <!-- Nút thêm gợi ý đặt bên dưới danh sách -->
+    <div class="text-center mt-3 mb-1">
+      <button
+        class="btn btn-sm btn-primary"
+        (click)="openAddItem(group)"
+        title="Thêm gợi ý trang phục mới"
+      >
+        ➕ Thêm gợi ý
+      </button>
+    </div>
   </div>
 }
+</div>
+<!-- Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form (submit)="confirmAddItem($event)">
+        <div class="modal-header">
+          <h5 class="modal-title">Thêm gợi ý trang phục</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="VD: Áo thun cotton, Quần short, Mũ chống nắng..."
+            [(ngModel)]="newItemText"
+            name="newItemText"
+            required
+          />
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" type="submit">Thêm gợi ý</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal thêm danh sách mới -->
+<div class="modal fade" id="addListModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form (submit)="confirmAddList($event)">
+        <div class="modal-header">
+          <h5 class="modal-title">Thêm khoảng nhiệt độ mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label for="tempInput" class="form-label">Nhiệt độ (°C)</label>
+          <input
+            id="tempInput"
+            type="number"
+            class="form-control"
+            placeholder="VD: 35, 0, -10..."
+            [(ngModel)]="newListTitle"
+            name="newListTitle"
+            required
+            min="-50"
+            max="60"
+            step="1"
+          />
+          <small class="form-text text-muted">Nhập nhiệt độ (có thể nhập số âm cho mùa đông)</small>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" type="submit">Tạo khoảng nhiệt độ</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

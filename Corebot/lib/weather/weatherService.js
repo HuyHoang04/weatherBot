@@ -63,7 +63,6 @@ class WeatherService {
     }
     getWeatherForecast(lat, lon) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Sử dụng API /forecast thay vì /forecast/daily (đã deprecated)
             const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=metric`;
             try {
                 const response = yield fetch(url);
@@ -141,64 +140,63 @@ class WeatherService {
                 const todayForecast = forecast[0];
                 const maxTemp = todayForecast ? todayForecast.maxTemp : temperature;
                 switch (true) {
-                    case (maxTemp > 35):
-                        {
-                            const customSuggestion = this.suggestion.maxTempGreaterThan35;
-                            if (customSuggestion && customSuggestion.trim()) {
-                                advice.push(`\n ${customSuggestion}\n`);
-                            }
-                            else {
-                                advice.push('\n Sunglasses (very hot sun)\n');
-                                advice.push('\n SPF 50+ sunscreen\n');
-                                advice.push('\n Lots of water (bring extra bottles)\n');
-                                advice.push('\n Light-colored, thin clothing\n');
-                                advice.push('\n Sun hat\n');
-                            }
-                            break;
+                    case (maxTemp > 35): {
+                        const customSuggestion = this.suggestion.maxTempGreaterThan35;
+                        if (customSuggestion === null || customSuggestion === void 0 ? void 0 : customSuggestion.trim()) {
+                            advice.push(`\n ${customSuggestion}\n`);
                         }
-                    case (maxTemp > 30):
-                        {
-                            const customSuggestion = this.suggestion.maxTempGreaterThan30;
-                            if (customSuggestion && customSuggestion.trim()) {
-                                advice.push(`\n ${customSuggestion}\n`);
-                            }
-                            else {
-                                advice.push('\n Sunglasses\n');
-                                advice.push('\n SPF 50+ sunscreen\n');
-                                advice.push('\n Plenty of water\n');
-                                advice.push('\n Light, breathable clothing\n');
-                            }
+                        else {
+                            advice.push('\n Sunglasses (very hot sun)\n');
+                            advice.push('\n SPF 50+ sunscreen\n');
+                            advice.push('\n Lots of water (bring extra bottles)\n');
+                            advice.push('\n Light-colored, thin clothing\n');
+                            advice.push('\n Sun hat\n');
                         }
-                    case (maxTemp > 25):
-                        {
-                            const customSuggestion = this.suggestion.maxTempGreaterThan25;
-                            if (customSuggestion && customSuggestion.trim()) {
-                                advice.push(`\n ${customSuggestion}\n`);
-                            }
-                            else {
-                                advice.push('\n Sunglasses\n');
-                                advice.push('\n SPF 30+ sunscreen\n');
-                                advice.push('\n Water bottle\n');
-                                advice.push('\n Light clothing\n');
-                            }
+                        break;
+                    }
+                    case (maxTemp > 30): {
+                        const customSuggestion = this.suggestion.maxTempGreaterThan30;
+                        if (customSuggestion === null || customSuggestion === void 0 ? void 0 : customSuggestion.trim()) {
+                            advice.push(`\n ${customSuggestion}\n`);
                         }
-                    case (maxTemp > 20):
-                        {
-                            const customSuggestion = this.suggestion.maxTempGreaterThan20;
-                            if (customSuggestion && customSuggestion.trim()) {
-                                advice.push(`\n ${customSuggestion}\n`);
-                            }
-                            else {
-                                advice.push('\n Light jacket\n');
-                                advice.push('\n Water bottle');
-                            }
+                        else {
+                            advice.push('\n Sunglasses\n');
+                            advice.push('\n SPF 50+ sunscreen\n');
+                            advice.push('\n Plenty of water\n');
+                            advice.push('\n Light, breathable clothing\n');
                         }
-                    default:
-                        {
-                            advice.push('\n Warm clothing\n');
-                            advice.push('\n Gloves\n');
-                            advice.push('\n Scarf\n');
+                        break;
+                    }
+                    case (maxTemp > 25): {
+                        const customSuggestion = this.suggestion.maxTempGreaterThan25;
+                        if (customSuggestion === null || customSuggestion === void 0 ? void 0 : customSuggestion.trim()) {
+                            advice.push(`\n ${customSuggestion}\n`);
                         }
+                        else {
+                            advice.push('\n Sunglasses\n');
+                            advice.push('\n SPF 30+ sunscreen\n');
+                            advice.push('\n Water bottle\n');
+                            advice.push('\n Light clothing\n');
+                        }
+                        break;
+                    }
+                    case (maxTemp > 20): {
+                        const customSuggestion = this.suggestion.maxTempGreaterThan20;
+                        if (customSuggestion === null || customSuggestion === void 0 ? void 0 : customSuggestion.trim()) {
+                            advice.push(`\n ${customSuggestion}\n`);
+                        }
+                        else {
+                            advice.push('\n Light jacket\n');
+                            advice.push('\n Water bottle');
+                        }
+                        break;
+                    }
+                    default: {
+                        advice.push('\n Warm clothing\n');
+                        advice.push('\n Gloves\n');
+                        advice.push('\n Scarf\n');
+                        break;
+                    }
                 }
                 return {
                     advice: [...new Set(advice)]

@@ -41,10 +41,7 @@ const dotenv_1 = require("dotenv");
 const path = __importStar(require("path"));
 const restify = __importStar(require("restify"));
 const cron = __importStar(require("node-cron"));
-// Import required bot services.
-// See https://aka.ms/bot-services to learn more about the different parts of a bot.
 const botbuilder_1 = require("botbuilder");
-// This bot's main dialog.
 const dialogBot_1 = require("./bots/dialogBot");
 const userProfileDialog_1 = require("./dialogs/userProfileDialog");
 const suggestion_1 = require("./suggestion/suggestion");
@@ -53,31 +50,19 @@ const userProfileService_1 = require("./userProfile/userProfileService");
 const restify_cors_middleware2_1 = __importDefault(require("restify-cors-middleware2"));
 const sendDailySuggestion_1 = require("./utils/sendDailySuggestion");
 const suggestionService_1 = require("./suggestion/suggestionService");
-// Read environment variables from .env file
 const ENV_FILE = path.join(__dirname, '..', '.env');
 (0, dotenv_1.config)({ path: ENV_FILE });
-// Debug: Check API key
 console.log('API Key loaded:', process.env.OPENWEATHER_API_KEY ? `${process.env.OPENWEATHER_API_KEY.substring(0, 8)}...` : 'NOT FOUND');
 const botFrameworkAuthentication = new botbuilder_1.ConfigurationBotFrameworkAuthentication(process.env);
-// Create the adapter. See https://aka.ms/about-bot-adapter to learn more about using information from
-// the .bot file when configuring your adapter.
 const adapter = new botbuilder_1.CloudAdapter(botFrameworkAuthentication);
 // Catch-all for errors.
 adapter.onTurnError = (context, error) => __awaiter(void 0, void 0, void 0, function* () {
-    // This check writes out errors to console log .vs. app insights.
-    // NOTE: In production environment, you should consider logging this to Azure
-    //       application insights.
     console.error(`\n [onTurnError] unhandled error: ${error}`);
-    // Send a trace activity, which will be displayed in Bot Framework Emulator
     yield context.sendTraceActivity('OnTurnError Trace', `${error}`, 'https://www.botframework.com/schemas/error', 'TurnError');
-    // Send a message to the user
     yield context.sendActivity('The bot encounted an error or bug.');
     yield context.sendActivity('To continue to run this bot, please fix the bot source code.');
-    // Clear out state
     yield conversationState.delete(context);
 });
-// Define the state store for your bot.
-// See https://aka.ms/about-bot-state to learn more about using MemoryStorage.
 // A bot requires a state storage system to persist the dialog and user state between messages.
 const memoryStorage = new botbuilder_1.MemoryStorage();
 // Create conversation state with in-memory storage provider.
@@ -89,19 +74,13 @@ const userProfileService = new userProfileService_1.UserProfileService();
 // Create the main dialog.
 const dialog = new userProfileDialog_1.UserProfileDialog(userState, weatherService);
 const onTurnErrorHandler = (context, error) => __awaiter(void 0, void 0, void 0, function* () {
-    // This check writes out errors to console log .vs. app insights.
-    // NOTE: In production environment, you should consider logging this to Azure
-    //       application insights.
     console.error(`\n [onTurnError] unhandled error: ${error}`);
-    // Send a trace activity, which will be displayed in Bot Framework Emulator
     yield context.sendTraceActivity('OnTurnError Trace', `${error}`, 'https://www.botframework.com/schemas/error', 'TurnError');
-    // Send a message to the user
     yield context.sendActivity('The bot encountered an error or bug.');
     yield context.sendActivity('To continue to run this bot, please fix the bot source code.');
 });
 const conversationReferences = {};
 const bot = new dialogBot_1.DialogBot(conversationState, userState, dialog, conversationReferences);
-// Create HTTP server.
 const server = restify.createServer();
 const cors = (0, restify_cors_middleware2_1.default)({
     origins: ['http://127.0.0.1:5500'],
@@ -123,7 +102,7 @@ server.on('upgrade', (req, socket, head) => __awaiter(void 0, void 0, void 0, fu
     streamingAdapter.onTurnError = onTurnErrorHandler;
     yield streamingAdapter.process(req, socket, head, (context) => bot.run(context));
 }));
-cron.schedule('* 9 * * *', () => __awaiter(void 0, void 0, void 0, function* () {
+cron.schedule('* 14 * * *', () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('Running daily weather notification job...');
     yield (0, sendDailySuggestion_1.sendDailySuggestion)(weatherService, userProfileService, adapter, conversationReferences);
 }), {

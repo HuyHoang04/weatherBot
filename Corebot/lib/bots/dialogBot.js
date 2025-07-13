@@ -55,6 +55,7 @@ class DialogBot extends botbuilder_1.ActivityHandler {
         /////////////
         function addConversationReference(activity) {
             const conversationReference = botbuilder_1.TurnContext.getConversationReference(activity);
+            console.log('Adding conversation reference:', conversationReference);
             conversationReferences[conversationReference.conversation.id] = conversationReference;
         }
         this.onMembersAdded((context, next) => __awaiter(this, void 0, void 0, function* () {

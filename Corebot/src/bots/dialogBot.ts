@@ -17,7 +17,7 @@ export class DialogBot extends ActivityHandler {
      * @param {UserState} userState
      * @param {Dialog} dialog
      */
-    constructor(conversationState: BotState, userState: BotState, dialog: Dialog, conversationReferences) {
+    constructor(conversationState: BotState, userState: BotState, dialog: Dialog, conversationReferences: any) {
         super();
         if (!conversationState) throw new Error('[DialogBot]: Missing parameter. conversationState is required');
         if (!userState) throw new Error('[DialogBot]: Missing parameter. userState is required');
@@ -54,8 +54,9 @@ export class DialogBot extends ActivityHandler {
             await next();
         });
         /////////////
-        function addConversationReference(activity): void {
+        function addConversationReference(activity: any): void {
             const conversationReference = TurnContext.getConversationReference(activity);
+            console.log('Adding conversation reference:', conversationReference);
             conversationReferences[conversationReference.conversation.id] = conversationReference;
         }
         

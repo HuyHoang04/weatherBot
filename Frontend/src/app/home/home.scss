@@ -1,29 +1,146 @@
+.px-4.py-5.my-5 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  border-radius: 15px;
+  margin: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.text-center.mb-4 h1 {
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-weight: 700;
+}
+
+.btn-success {
+  background: linear-gradient(45deg, #ff6b6b, #ffa726);
+  border: none;
+  border-radius: 25px;
+  padding: 12px 24px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    background: linear-gradient(45deg, #ffa726, #ff6b6b);
+  }
+}
+
+// Button "add more" styling - Updated for "Thêm gợi ý"
+.btn-sm.btn-primary {
+  background: linear-gradient(45deg, #28a745, #20c997);
+  border: none;
+  border-radius: 20px;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(45deg, #20c997, #28a745);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
 .box-container {
   width: 200px;
   max-width: 100%;
   margin: 0 25px 25px 0;
   display: inline-block;
   vertical-align: top;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  border-top: 4px solid;
+  transition: all 0.3s ease;
+  padding-bottom: 15px; // Thêm padding để có chỗ cho nút
+  
+  // Màu viền khác nhau cho từng container
+  &:nth-child(1) {
+    border-top-color: #ff6b6b;
+  }
+  
+  &:nth-child(2) {
+    border-top-color: #4ecdc4;
+  }
+  
+  &:nth-child(3) {
+    border-top-color: #45b7d1;
+  }
+  
+  &:nth-child(4) {
+    border-top-color: #96ceb4;
+  }
+  
+  &:nth-child(5) {
+    border-top-color: #feca57;
+  }
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// Title styling with gradient text
+.h2 {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+  padding: 20px;
+  margin: 0;
+  text-align: center;
 }
 
 .list {
   min-height: 60px;
   overflow: hidden;
   display: block;
+  padding: 15px;
+  margin-bottom: 10px; // Thêm margin bottom để tách khỏi nút
+  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
 }
 
 .box {
-  padding: 20px 10px;
-  border-bottom: solid 1px #ccc;
-  color: rgba(0, 0, 0, 0.87);
+  padding: 15px 12px;
+  border-bottom: none;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  color: #495057;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
   cursor: move;
-  background: white;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
   font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(145deg, #f0f0f0, #ffffff);
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .cdk-drag-preview {
@@ -48,4 +165,74 @@
 
 .example-list.cdk-drop-list-dragging .example-box:not(.cdk-drag-placeholder) {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Modal styling
+.modal-content {
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 15px 15px 0 0;
+  
+  .modal-title {
+    font-weight: 600;
+  }
+  
+  .btn-close {
+    filter: brightness(0) invert(1);
+  }
+}
+
+.modal-body {
+  padding: 30px;
+  
+  .form-control {
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    padding: 12px 15px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    
+    &:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+  }
+  
+  .form-text {
+    font-size: 12px;
+    margin-top: 5px;
+  }
+}
+
+.modal-footer {
+  border-top: none;
+  padding: 20px 30px;
+  
+  .btn {
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+    margin-left: 10px;
+    
+    &.btn-primary {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border: none;
+      
+      &:hover {
+        background: linear-gradient(45deg, #764ba2, #667eea);
+      }
+    }
+  }
 }
