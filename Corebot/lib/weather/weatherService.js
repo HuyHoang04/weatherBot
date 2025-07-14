@@ -10,10 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WeatherService = void 0;
+const suggestionService_1 = require("../suggestion/suggestionService");
 class WeatherService {
-    constructor(suggestion) {
+    constructor() {
         this.apiKey = process.env.OPENWEATHER_API_KEY;
-        this.suggestion = suggestion;
+        this.suggestionService = new suggestionService_1.SuggestionService();
     }
     getGeocoding(city) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -139,67 +140,31 @@ class WeatherService {
                 // Lấy thông tin từ dự báo hôm nay
                 const todayForecast = forecast[0];
                 const maxTemp = todayForecast ? todayForecast.maxTemp : temperature;
-                switch (true) {
-                    case (maxTemp > 35): {
-                        const customSuggestion = this.suggestion.maxTempGreaterThan35;
-                        if (customSuggestion === null || customSuggestion === void 0 ? void 0 : customSuggestion.trim()) {
-                            advice.push(`\n ${customSuggestion}\n`);
+                // Lấy tất cả suggestions từ database
+                const allSuggestions = yield this.suggestionService.getAll();
+                // Lặp qua tất cả suggestions
+                if (Array.isArray(allSuggestions)) {
+                    for (const suggestion of allSuggestions) {
+                        // Nếu maxTemp > temperature trong suggestion thì push và break
+                        if (maxTemp > suggestion.temperature) {
+                            if (suggestion.items && suggestion.items.length > 0) {
+                                advice.push(...suggestion.items);
+                            }
+                            break;
                         }
-                        else {
-                            advice.push('\n Sunglasses (very hot sun)\n');
-                            advice.push('\n SPF 50+ sunscreen\n');
-                            advice.push('\n Lots of water (bring extra bottles)\n');
-                            advice.push('\n Light-colored, thin clothing\n');
-                            advice.push('\n Sun hat\n');
-                        }
-                        break;
                     }
-                    case (maxTemp > 30): {
-                        const customSuggestion = this.suggestion.maxTempGreaterThan30;
-                        if (customSuggestion === null || customSuggestion === void 0 ? void 0 : customSuggestion.trim()) {
-                            advice.push(`\n ${customSuggestion}\n`);
-                        }
-                        else {
-                            advice.push('\n Sunglasses\n');
-                            advice.push('\n SPF 50+ sunscreen\n');
-                            advice.push('\n Plenty of water\n');
-                            advice.push('\n Light, breathable clothing\n');
-                        }
-                        break;
+                }
+                // Nếu không tìm thấy suggestion phù hợp, dùng default
+                if (advice.length === 0) {
+                    if (maxTemp <= 20) {
+                        advice.push('Warm clothing', 'Gloves', 'Scarf');
                     }
-                    case (maxTemp > 25): {
-                        const customSuggestion = this.suggestion.maxTempGreaterThan25;
-                        if (customSuggestion === null || customSuggestion === void 0 ? void 0 : customSuggestion.trim()) {
-                            advice.push(`\n ${customSuggestion}\n`);
-                        }
-                        else {
-                            advice.push('\n Sunglasses\n');
-                            advice.push('\n SPF 30+ sunscreen\n');
-                            advice.push('\n Water bottle\n');
-                            advice.push('\n Light clothing\n');
-                        }
-                        break;
-                    }
-                    case (maxTemp > 20): {
-                        const customSuggestion = this.suggestion.maxTempGreaterThan20;
-                        if (customSuggestion === null || customSuggestion === void 0 ? void 0 : customSuggestion.trim()) {
-                            advice.push(`\n ${customSuggestion}\n`);
-                        }
-                        else {
-                            advice.push('\n Light jacket\n');
-                            advice.push('\n Water bottle');
-                        }
-                        break;
-                    }
-                    default: {
-                        advice.push('\n Warm clothing\n');
-                        advice.push('\n Gloves\n');
-                        advice.push('\n Scarf\n');
-                        break;
+                    else {
+                        advice.push('Light clothing', 'Water bottle');
                     }
                 }
                 return {
-                    advice: [...new Set(advice)]
+                    advice: [...new Set(advice)] // Remove duplicates
                 };
             }
             catch (error) {

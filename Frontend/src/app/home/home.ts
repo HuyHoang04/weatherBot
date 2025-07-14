@@ -47,29 +47,64 @@ export class Home implements OnInit {
   
   // Load dữ liệu từ server khi component khởi tạo
   ngOnInit() {
+    console.log('Component initialized, loading suggestions...');
     this.loadSuggestionsFromServer();
+  }
+
+  // Method để reload dữ liệu từ server (có thể gọi từ button)
+  reloadFromServer() {
+    this.loadSuggestionsFromServer();
+  }
+
+  // Test connection to backend
+  testConnection() {
+    console.log('Testing connection to backend...');
+    this.http.get(`${this.apiUrl}`, { observe: 'response' })
+      .subscribe({
+        next: (response) => {
+          console.log('Connection successful:', response);
+          alert('Kết nối backend thành công!');
+        },
+        error: (error) => {
+          console.error('Connection failed:', error);
+          if (error.status === 0) {
+            alert('Không thể kết nối đến backend. Vui lòng kiểm tra:\n1. Backend có đang chạy?\n2. URL có đúng không?\n3. CORS có được cấu hình đúng?');
+          } else {
+            alert(`Lỗi kết nối: ${error.status} - ${error.message}`);
+          }
+        }
+      });
   }
 
   // Load suggestions từ server
   loadSuggestionsFromServer() {
-    this.http.get<any>(`${this.apiUrl}`)
+    console.log('Starting to load suggestions from server...');
+    
+    this.http.get<any[]>(`${this.apiUrl}`)
       .subscribe({
-        next: (response) => {
-          console.log('Loaded suggestions from server:', response);
-          if (response.suggestions && response.suggestions.length > 0) {
-            // Cấu trúc mới đã đúng format frontend
-            this.list = response.suggestions.map((item: any) => ({
-              title: item.title,
-              items: [...item.items] // Copy array
+        next: (suggestions) => {
+          console.log('Loaded suggestions from server:', suggestions);
+          console.log('Type of suggestions:', typeof suggestions);
+          console.log('Is array:', Array.isArray(suggestions));
+          
+          if (suggestions && Array.isArray(suggestions) && suggestions.length > 0) {
+            // Backend trả về array suggestions trực tiếp
+            this.list = suggestions.map((item: any) => ({
+              title: item.temperature.toString(),
+              items: [...(item.items || [])] // Copy array
             }));
             
-            // Sắp xếp theo nhiệt độ giảm dần
-            this.list.sort((a, b) => parseInt(b.title) - parseInt(a.title));
+            // Sắp xếp theo nhiệt độ giảm dần (backend đã sắp xếp rồi)
             console.log('Updated list from server:', this.list);
+            alert(`Đã load ${suggestions.length} gợi ý từ server thành công!`);
+          } else {
+            console.log('No suggestions found on server, keeping default data');
+            alert('Không có dữ liệu trên server, sử dụng dữ liệu mặc định');
           }
         },
         error: (error) => {
           console.error('Error loading suggestions from server:', error);
+          alert('Lỗi khi load dữ liệu từ server: ' + error.message);
           // Giữ nguyên dữ liệu mặc định nếu không load được
         }
       });
@@ -177,11 +212,14 @@ export class Home implements OnInit {
     saveAllSuggestions() {
       console.log('Saving all suggestions to server...');
       
-      const payload = {
-        suggestions: this.list
-      };
+      // Chuyển đổi format frontend sang backend
+      const backendSuggestions = this.list.map(item => ({
+        id: `temp_${item.title}`,
+        temperature: parseInt(item.title),
+        items: item.items
+      }));
       
-      this.http.post(`${this.apiUrl}/saveAll`, payload)
+      this.http.post(`${this.apiUrl}`, backendSuggestions)
         .subscribe({
           next: (response: any) => {
             alert('Tất cả gợi ý đã được lưu thành công!');
@@ -194,24 +232,71 @@ export class Home implements OnInit {
         });
     }
 
-    // Lưu một gợi ý cụ thể lên server
-    private saveSuggestion(temperatureId: string, suggestionText: string) {
-      const payload = {
-        id: temperatureId,
-        message: suggestionText
+    // Lưu một gợi ý cụ thể lên server (khi thêm item mới)
+    private saveSuggestionForGroup(group: any) {
+      const backendSuggestion = {
+        id: `temp_${group.title}`,
+        temperature: parseInt(group.title),
+        items: group.items
       };
 
-      return this.http.post(this.apiUrl, payload).toPromise();
+      this.http.post(this.apiUrl, [backendSuggestion])
+        .subscribe({
+          next: () => {
+            console.log(`Suggestion for ${group.title}°C saved successfully`);
+          },
+          error: (error) => {
+            console.error(`Error saving suggestion for ${group.title}°C:`, error);
+          }
+        });
     }
 
-    saveSuggestionForGroup(group: any) {
-      const suggestionText = group.items.join(', ');
-      this.saveSuggestion(group.title, suggestionText)
-        .then(() => {
-          console.log(`Suggestion for ${group.title}°C saved successfully`);
-        })
-        .catch(error => {
-          console.error(`Error saving suggestion for ${group.title}°C:`, error);
+    // Xóa một item khỏi group
+    deleteItem(group: any, item: string, event: Event) {
+      // Ngăn drag event khi click nút xóa
+      event.stopPropagation();
+      
+      if (confirm(`Bạn có chắc muốn xóa "${item}" khỏi nhóm ${group.title}°C?`)) {
+        const index = group.items.indexOf(item);
+        if (index > -1) {
+          group.items.splice(index, 1);
+          
+          // Tự động lưu lên server sau khi xóa
+          this.saveSuggestionForGroup(group);
+          
+          console.log(`Deleted item "${item}" from group ${group.title}°C`);
+        }
+      }
+    }
+
+    // Xóa toàn bộ group nhiệt độ
+    deleteGroup(group: any) {
+      if (confirm(`Bạn có chắc muốn xóa toàn bộ nhóm ${group.title}°C và tất cả gợi ý trong đó?`)) {
+        const index = this.list.indexOf(group);
+        if (index > -1) {
+          this.list.splice(index, 1);
+          
+          // Xóa khỏi database
+          this.deleteGroupFromServer(group.title);
+          
+          console.log(`Deleted group ${group.title}°C`);
+        }
+      }
+    }
+
+    // Xóa group khỏi server
+    private deleteGroupFromServer(temperature: string) {
+      const deleteUrl = `${this.apiUrl}/${temperature}`;
+      
+      this.http.delete(deleteUrl)
+        .subscribe({
+          next: () => {
+            console.log(`Group ${temperature}°C deleted from server successfully`);
+          },
+          error: (error) => {
+            console.error(`Error deleting group ${temperature}°C from server:`, error);
+            alert('Có lỗi khi xóa nhóm từ server!');
+          }
         });
     }
   }

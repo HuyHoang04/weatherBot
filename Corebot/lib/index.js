@@ -69,7 +69,8 @@ const memoryStorage = new botbuilder_1.MemoryStorage();
 const conversationState = new botbuilder_1.ConversationState(memoryStorage);
 const userState = new botbuilder_1.UserState(memoryStorage);
 const suggestion = new suggestion_1.Suggestion();
-const weatherService = new weatherService_1.WeatherService(suggestion);
+const suggestionService = new suggestionService_1.SuggestionService();
+const weatherService = new weatherService_1.WeatherService();
 const userProfileService = new userProfileService_1.UserProfileService();
 // Create the main dialog.
 const dialog = new userProfileDialog_1.UserProfileDialog(userState, weatherService);
@@ -83,7 +84,7 @@ const conversationReferences = {};
 const bot = new dialogBot_1.DialogBot(conversationState, userState, dialog, conversationReferences);
 const server = restify.createServer();
 const cors = (0, restify_cors_middleware2_1.default)({
-    origins: ['http://127.0.0.1:5500'],
+    origins: ['http://127.0.0.1:5500', 'http://localhost:4200', 'http://127.0.0.1:4200'],
     allowHeaders: ['Authorization', 'Content-Type'],
     exposeHeaders: ['Authorization']
 });
@@ -127,21 +128,98 @@ server.get('/api/notify', (req, res, next) => __awaiter(void 0, void 0, void 0, 
         res.end();
     }
 }));
-const suggestionService = new suggestionService_1.SuggestionService();
-server.post('/api/suggestions', (req, res, next) => {
-    const suggestionId = req.body.id;
-    const suggestionText = req.body.message;
-    req.accepts('application/json');
+server.get('/api/suggestions', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        suggestionService.setSuggestion(suggestionId, suggestionText, suggestion);
+        console.log('GET /api/suggestions called');
+        const suggestions = yield suggestionService.getAll();
+        console.log('Retrieved suggestions from database:', suggestions);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(200);
+        res.end(JSON.stringify(suggestions));
     }
     catch (error) {
-        console.error('Error setting suggestion:', error);
-        res.send(400, { error: error.message });
-        return next();
+        console.error('Error fetching suggestions:', error);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Failed to fetch suggestions' }));
     }
-    console.log(suggestion);
-    res.send(200, { message: 'Suggestion updated successfully' });
-    return next();
-});
+}));
+server.post('/api/suggestions', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log('POST /api/suggestions received data:', req.body);
+        const suggestions = req.body;
+        if (!Array.isArray(suggestions) || suggestions.length === 0) {
+            console.log('Invalid suggestions data - not an array or empty');
+            res.setHeader('Content-Type', 'application/json');
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: 'Invalid suggestions data' }));
+            return;
+        }
+        console.log('Valid suggestions data, calling saveAll...');
+        const result = yield suggestionService.saveAll(suggestions);
+        console.log('SaveAll completed with result:', result);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(201);
+        res.end(JSON.stringify({ message: 'Suggestions saved successfully', result }));
+    }
+    catch (error) {
+        console.error('Error saving suggestions:', error);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Failed to save suggestions', details: error.message }));
+    }
+}));
+// Test endpoint để tạo dữ liệu mẫu
+server.post('/api/suggestions/test', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log('Creating test data...');
+        const testSuggestions = [
+            {
+                id: 'test_35',
+                temperature: 35,
+                items: ['Áo thun cotton', 'Quần short', 'Dép xăng đan']
+            },
+            {
+                id: 'test_30',
+                temperature: 30,
+                items: ['Áo sơ mi', 'Quần jeans', 'Giày sneaker']
+            }
+        ];
+        const result = yield suggestionService.saveAll(testSuggestions);
+        console.log('Test data created:', result);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(201);
+        res.end(JSON.stringify({ message: 'Test data created', result }));
+    }
+    catch (error) {
+        console.error('Error creating test data:', error);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: error.message }));
+    }
+}));
+// DELETE endpoint để xóa suggestion theo temperature
+server.del('/api/suggestions/:temperature', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const temperature = parseInt(req.params.temperature);
+        console.log(`DELETE /api/suggestions/${temperature} called`);
+        if (isNaN(temperature)) {
+            res.setHeader('Content-Type', 'application/json');
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: 'Invalid temperature parameter' }));
+            return;
+        }
+        const result = yield suggestionService.deleteByTemperature(temperature);
+        console.log(`Deleted suggestion for temperature ${temperature}:`, result);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(200);
+        res.end(JSON.stringify({ message: `Suggestion for ${temperature}°C deleted successfully` }));
+    }
+    catch (error) {
+        console.error('Error deleting suggestion:', error);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Failed to delete suggestion', details: error.message }));
+    }
+}));
 //# sourceMappingURL=index.js.map

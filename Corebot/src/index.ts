@@ -59,7 +59,8 @@ const conversationState = new ConversationState(memoryStorage);
 const userState = new UserState(memoryStorage);
 
 const suggestion = new Suggestion();
-const weatherService = new WeatherService(suggestion);
+const suggestionService = new SuggestionService();
+const weatherService = new WeatherService();
 const userProfileService = new UserProfileService();
 
 // Create the main dialog.
@@ -87,7 +88,7 @@ const bot = new DialogBot(conversationState, userState, dialog, conversationRefe
 
 const server = restify.createServer();
 const cors = corsMiddleware({
-  origins: ['http://127.0.0.1:5500'],
+  origins: ['http://127.0.0.1:5500', 'http://localhost:4200', 'http://127.0.0.1:4200'],
   allowHeaders: ['Authorization', 'Content-Type'],
   exposeHeaders: ['Authorization']
 });
@@ -111,6 +112,7 @@ server.on('upgrade', async (req, socket, head) => {
 
     await streamingAdapter.process(req, socket as unknown as INodeSocket, head, (context) => bot.run(context));
 });
+
 
 cron.schedule('* 14 * * *', async () => {
     console.log('Running daily weather notification job...');
@@ -141,22 +143,108 @@ server.get('/api/notify', async (req, res, next) => {
     }
 });
 
-const suggestionService = new SuggestionService()
-server.post('/api/suggestions', (req, res, next) => {
-    const suggestionId = req.body.id;
-    const suggestionText = req.body.message;
-    req.accepts('application/json');
+server.get('/api/suggestions', async (req, res, next) => {
     try {
-        suggestionService.setSuggestion(suggestionId, suggestionText, suggestion);
+        console.log('GET /api/suggestions called');
+        const suggestions = await suggestionService.getAll();
+        console.log('Retrieved suggestions from database:', suggestions);
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(200);
+        res.end(JSON.stringify(suggestions));
     } catch (error) {
-        console.error('Error setting suggestion:', error);
-        res.send(400, { error: error.message });
-        return next();
+        console.error('Error fetching suggestions:', error);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Failed to fetch suggestions' }));
     }
-    console.log(suggestion);
+});
 
-    res.send(200, { message: 'Suggestion updated successfully' });
-    return next();
+server.post('/api/suggestions', async (req, res, next) => {
+    try {
+        console.log('POST /api/suggestions received data:', req.body);
+        
+        const suggestions: Suggestion[] = req.body;
+        if (!Array.isArray(suggestions) || suggestions.length === 0) {
+            console.log('Invalid suggestions data - not an array or empty');
+            res.setHeader('Content-Type', 'application/json');
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: 'Invalid suggestions data' }));
+            return;
+        }
+
+        console.log('Valid suggestions data, calling saveAll...');
+        const result = await suggestionService.saveAll(suggestions);
+        console.log('SaveAll completed with result:', result);
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(201);
+        res.end(JSON.stringify({ message: 'Suggestions saved successfully', result }));
+    } catch (error) {
+        console.error('Error saving suggestions:', error);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Failed to save suggestions', details: error.message }));
+    }
+});
+
+// Test endpoint để tạo dữ liệu mẫu
+server.post('/api/suggestions/test', async (req, res, next) => {
+    try {
+        console.log('Creating test data...');
+        
+        const testSuggestions = [
+            {
+                id: 'test_35',
+                temperature: 35,
+                items: ['Áo thun cotton', 'Quần short', 'Dép xăng đan']
+            },
+            {
+                id: 'test_30', 
+                temperature: 30,
+                items: ['Áo sơ mi', 'Quần jeans', 'Giày sneaker']
+            }
+        ];
+
+        const result = await suggestionService.saveAll(testSuggestions);
+        console.log('Test data created:', result);
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(201);
+        res.end(JSON.stringify({ message: 'Test data created', result }));
+    } catch (error) {
+        console.error('Error creating test data:', error);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: error.message }));
+    }
+});
+
+// DELETE endpoint để xóa suggestion theo temperature
+server.del('/api/suggestions/:temperature', async (req, res, next) => {
+    try {
+        const temperature = parseInt(req.params.temperature);
+        console.log(`DELETE /api/suggestions/${temperature} called`);
+        
+        if (isNaN(temperature)) {
+            res.setHeader('Content-Type', 'application/json');
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: 'Invalid temperature parameter' }));
+            return;
+        }
+
+        const result = await suggestionService.deleteByTemperature(temperature);
+        console.log(`Deleted suggestion for temperature ${temperature}:`, result);
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(200);
+        res.end(JSON.stringify({ message: `Suggestion for ${temperature}°C deleted successfully` }));
+    } catch (error) {
+        console.error('Error deleting suggestion:', error);
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Failed to delete suggestion', details: error.message }));
+    }
 });
 
 

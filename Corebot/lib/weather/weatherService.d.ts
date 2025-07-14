@@ -1,4 +1,3 @@
-import { Suggestion } from '../suggestion/suggestion';
 export interface GeocodingResponse {
     lat: number;
     lon: number;
@@ -7,8 +6,8 @@ export interface GeocodingResponse {
 }
 export declare class WeatherService {
     private apiKey;
-    private suggestion;
-    constructor(suggestion: Suggestion);
+    private suggestionService;
+    constructor();
     getGeocoding(city: string): Promise<GeocodingResponse>;
     getWeatherNow(lat: number, lon: number): Promise<any>;
     getWeatherForecast(lat: number, lon: number): Promise<any>;

@@ -1,1 +1,1 @@
-{"version":3,"file":"suggestion.js","sourceRoot":"","sources":["../../src/suggestion/suggestion.ts"],"names":[],"mappings":";;;AAAA,MAAa,UAAU;IAKnB;QACI,IAAI,CAAC,oBAAoB,GAAE,EAAE,CAAC;QAC9B,IAAI,CAAC,oBAAoB,GAAG,EAAE,CAAC;QAC/B,IAAI,CAAC,oBAAoB,GAAG,EAAE,CAAC;QAC/B,IAAI,CAAC,oBAAoB,GAAG,EAAE,CAAC;IACnC,CAAC;CACJ;AAXD,gCAWC"}
+{"version":3,"file":"suggestion.js","sourceRoot":"","sources":["../../src/suggestion/suggestion.ts"],"names":[],"mappings":";;;AAAA,MAAa,UAAU;CAItB;AAJD,gCAIC"}
