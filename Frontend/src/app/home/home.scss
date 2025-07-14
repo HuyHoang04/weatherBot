@@ -28,28 +28,42 @@
   }
 }
 
-// Button "add more" styling - Updated for "Thêm gợi ý"
-.btn-sm.btn-primary {
-  background: linear-gradient(45deg, #28a745, #20c997);
+.btn-sm.btn-secondary {
+  background: linear-gradient(45deg, #6c757d, #5a6268);
   border: none;
   border-radius: 20px;
   color: white;
-  font-weight: 600;
-  font-size: 12px;
-  padding: 8px 12px;
-  box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+  font-weight: 500;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
-  white-space: nowrap;
   
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-    background: linear-gradient(45deg, #20c997, #28a745);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(45deg, #5a6268, #6c757d);
   }
+}
+
+// Nút "Lưu tất cả" styling
+.btn-primary {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  border: none;
+  border-radius: 25px;
+  padding: 12px 24px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+  transition: all 0.3s ease;
   
-  &:active {
-    transform: translateY(0);
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+    background: linear-gradient(45deg, #0056b3, #007bff);
   }
+}
+
+// Spacing cho các nút
+.me-3 {
+  margin-right: 1rem !important;
 }
 
 .box-container {
@@ -64,7 +78,6 @@
   overflow: hidden;
   border-top: 4px solid;
   transition: all 0.3s ease;
-  padding-bottom: 15px; // Thêm padding để có chỗ cho nút
   
   // Màu viền khác nhau cho từng container
   &:nth-child(1) {
@@ -110,7 +123,6 @@
   overflow: hidden;
   display: block;
   padding: 15px;
-  margin-bottom: 10px; // Thêm margin bottom để tách khỏi nút
   background: linear-gradient(145deg, #f8f9fa, #e9ecef);
 }
 
@@ -165,74 +177,4 @@
 
 .example-list.cdk-drop-list-dragging .example-box:not(.cdk-drag-placeholder) {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-}
-
-// Modal styling
-.modal-content {
-  border-radius: 15px;
-  border: none;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.modal-header {
-  background: linear-gradient(45deg, #667eea, #764ba2);
-  color: white;
-  border-radius: 15px 15px 0 0;
-  
-  .modal-title {
-    font-weight: 600;
-  }
-  
-  .btn-close {
-    filter: brightness(0) invert(1);
-  }
-}
-
-.modal-body {
-  padding: 30px;
-  
-  .form-control {
-    border-radius: 10px;
-    border: 2px solid #e9ecef;
-    padding: 12px 15px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    
-    &:focus {
-      border-color: #667eea;
-      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-    }
-  }
-  
-  .form-label {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 8px;
-  }
-  
-  .form-text {
-    font-size: 12px;
-    margin-top: 5px;
-  }
-}
-
-.modal-footer {
-  border-top: none;
-  padding: 20px 30px;
-  
-  .btn {
-    border-radius: 10px;
-    padding: 10px 20px;
-    font-weight: 600;
-    margin-left: 10px;
-    
-    &.btn-primary {
-      background: linear-gradient(45deg, #667eea, #764ba2);
-      border: none;
-      
-      &:hover {
-        background: linear-gradient(45deg, #764ba2, #667eea);
-      }
-    }
-  }
 }

@@ -3,16 +3,19 @@
     <h1 class="h2"> Gợi ý trang phục theo nhiệt độ</h1>
   </div>
   
-  <!-- Nút thêm danh sách -->
+  <!-- Nút thêm danh sách và lưu -->
   <div class="text-center mb-4">
-    <button class="btn btn-success" (click)="addNewTemperatureList()">
-      Add New List
+    <button class="btn btn-success me-3" (click)="addNewTemperatureList()">
+      ➕ Thêm khoảng nhiệt độ
+    </button>
+    <button class="btn btn-primary" (click)="saveAllSuggestions()">
+      💾 Lưu tất cả
     </button>
   </div>
 <div class="px-4 py-5 my-5">
 @for (group of list; let i = $index; track group) {
   <div class="box-container">
-    <p class="h2 text-center">{{ group.title }}</p>
+    <p class="h2 text-center">>{{ group.title }}°C</p>
 
     <div
       cdkDropList
@@ -47,21 +50,21 @@
     <div class="modal-content">
       <form (submit)="confirmAddItem($event)">
         <div class="modal-header">
-          <h5 class="modal-title">Thêm gợi ý trang phục</h5>
+          <h5 class="modal-title">Thêm mục mới</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <input
             type="text"
             class="form-control"
-            placeholder="VD: Áo thun cotton, Quần short, Mũ chống nắng..."
+            placeholder="Nhập nội dung"
             [(ngModel)]="newItemText"
             name="newItemText"
             required
           />
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary" type="submit">Thêm gợi ý</button>
+          <button class="btn btn-primary" type="submit">Thêm</button>
           <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Hủy</button>
         </div>
       </form>
@@ -84,7 +87,7 @@
             id="tempInput"
             type="number"
             class="form-control"
-            placeholder="VD: 35, 0, -10..."
+            placeholder="VD: 40, 15, 5..."
             [(ngModel)]="newListTitle"
             name="newListTitle"
             required
@@ -92,7 +95,7 @@
             max="60"
             step="1"
           />
-          <small class="form-text text-muted">Nhập nhiệt độ (có thể nhập số âm cho mùa đông)</small>
+          <small class="form-text text-muted">Nhập nhiệt độ tối thiểu cho khoảng này (ví dụ: 35 có nghĩa là >35°C)</small>
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary" type="submit">Tạo khoảng nhiệt độ</button>
