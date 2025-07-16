@@ -138,17 +138,14 @@ export class WeatherService {
             const advice = [];
             const temperature = currentWeather.temperature;
             
-            // Lấy thông tin từ dự báo hôm nay
             const todayForecast = forecast[0];
             const maxTemp = todayForecast ? todayForecast.maxTemp : temperature;
 
-            // Lấy tất cả suggestions từ database
             const allSuggestions = await this.suggestionService.getAll();
-            
-            // Lặp qua tất cả suggestions
+
             if (Array.isArray(allSuggestions)) {
                 for (const suggestion of allSuggestions) {
-                    // Nếu maxTemp > temperature trong suggestion thì push và break
+   
                     if (maxTemp > suggestion.temperature) {
                         if (suggestion.items && suggestion.items.length > 0) {
                             advice.push(...suggestion.items);
@@ -158,7 +155,6 @@ export class WeatherService {
                 }
             }
 
-            // Nếu không tìm thấy suggestion phù hợp, dùng default
             if (advice.length === 0) {
                 if (maxTemp <= 20) {
                     advice.push('Warm clothing', 'Gloves', 'Scarf');

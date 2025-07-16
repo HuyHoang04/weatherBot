@@ -10,9 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WeatherService = void 0;
+const suggestionService_1 = require("../services/suggestionService");
 class WeatherService {
     constructor() {
         this.apiKey = process.env.OPENWEATHER_API_KEY;
+        this.suggestionService = new suggestionService_1.SuggestionService();
     }
     getGeocoding(city) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -62,7 +64,6 @@ class WeatherService {
     }
     getWeatherForecast(lat, lon) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Sử dụng API /forecast thay vì /forecast/daily (đã deprecated)
             const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=metric`;
             try {
                 const response = yield fetch(url);
@@ -136,79 +137,29 @@ class WeatherService {
                 const forecast = yield this.getWeatherForecast(lat, lon);
                 const advice = [];
                 const temperature = currentWeather.temperature;
-                const description = currentWeather.description.toLowerCase();
-                const humidity = currentWeather.humidity;
-                // Lấy thông tin từ dự báo hôm nay
                 const todayForecast = forecast[0];
                 const maxTemp = todayForecast ? todayForecast.maxTemp : temperature;
-                const minTemp = todayForecast ? todayForecast.minTemp : temperature;
-                // Temperature-based advice
-                if (maxTemp > 35) {
-                    advice.push('\n Sunglasses (very hot sun)\n');
-                    advice.push('\n SPF 50+ sunscreen\n');
-                    advice.push('\n Lots of water (bring extra bottles)\n');
-                    advice.push('\n Light-colored, thin clothing\n');
-                    advice.push('\n Sun hat\n');
+                const allSuggestions = yield this.suggestionService.getAll();
+                if (Array.isArray(allSuggestions)) {
+                    for (const suggestion of allSuggestions) {
+                        if (maxTemp > suggestion.temperature) {
+                            if (suggestion.items && suggestion.items.length > 0) {
+                                advice.push(...suggestion.items);
+                            }
+                            break;
+                        }
+                    }
                 }
-                else if (maxTemp > 30) {
-                    advice.push('\n Sunglasses\n');
-                    advice.push('\n SPF 50+ sunscreen\n');
-                    advice.push('\n Plenty of water\n');
-                    advice.push('\n Light, breathable clothing\n');
-                }
-                else if (maxTemp > 25) {
-                    advice.push('\n Sunglasses\n');
-                    advice.push('\n SPF 30+ sunscreen\n');
-                    advice.push('\n Water bottle\n');
-                    advice.push('\n Light clothing\n');
-                }
-                else if (maxTemp > 20) {
-                    advice.push('\n Light jacket\n');
-                    advice.push('\n Water bottle');
-                }
-                else {
-                    advice.push('\n Warm clothing\n');
-                    advice.push('\n Gloves\n');
-                    advice.push('\n Scarf\n');
-                }
-                // Additional advice for large temperature changes
-                if (maxTemp - minTemp > 10) {
-                    advice.push('\n Jacket (temperature varies greatly during the day)\n');
-                }
-                // Weather condition-based advice
-                if (description.includes('rain') || description.includes('drizzle')) {
-                    advice.push('\n Umbrella or raincoat\n');
-                    advice.push('\n Waterproof shoes\n');
-                }
-                if (description.includes('snow')) {
-                    advice.push('\n Non-slip shoes\n');
-                    advice.push('\n Thick gloves\n');
-                    advice.push('\n Warm scarf\n');
-                }
-                if (description.includes('thunderstorm')) {
-                    advice.push('\n Avoid going outside (thunderstorm)\n');
-                    advice.push('\n Sturdy umbrella\n');
-                }
-                // Humidity-based advice
-                if (humidity > 80) {
-                    advice.push('\n Breathable clothing\n');
-                    advice.push('\n Towel for sweat\n');
-                }
-                // Check weather forecast for today and tomorrow
-                let hasRainToday = false;
-                let hasRainTomorrow = false;
-                if (todayForecast && todayForecast.description.toLowerCase().includes('rain')) {
-                    hasRainToday = true;
-                    advice.push('\n Umbrella for today\n');
-                }
-                if (forecast[1] && forecast[1].description.toLowerCase().includes('rain')) {
-                    hasRainTomorrow = true;
-                    advice.push('\n Prepare umbrella for tomorrow\n');
+                if (advice.length === 0) {
+                    if (maxTemp <= 20) {
+                        advice.push('Warm clothing', 'Gloves', 'Scarf');
+                    }
+                    else {
+                        advice.push('Light clothing', 'Water bottle');
+                    }
                 }
                 return {
-                    currentWeather,
-                    forecast: todayForecast,
-                    advice: [...new Set(advice)]
+                    advice: [...new Set(advice)] // Remove duplicates
                 };
             }
             catch (error) {

@@ -65,6 +65,8 @@ export class DialogBot extends ActivityHandler {
             const welcomeText = 'Send a greeting like "Hi" to start'
             for (const member of membersAdded) {
                 if (member.id !== context.activity.recipient.id) {
+                    console.log(context.sendActivity(MessageFactory.text(welcomeText, welcomeText)))
+                    
                     await context.sendActivity(MessageFactory.text(welcomeText, welcomeText));
                 }
             }

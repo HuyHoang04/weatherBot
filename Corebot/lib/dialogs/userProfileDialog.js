@@ -11,14 +11,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserProfileDialog = void 0;
 const botbuilder_dialogs_1 = require("botbuilder-dialogs");
-const userProfile_1 = require("../userProfile/userProfile");
+const userProfile_1 = require("../models/userProfile");
 const extractCityFromMessage_1 = require("../utils/extractCityFromMessage");
 const isAskingForCurrentWeather_1 = require("../utils/isAskingForCurrentWeather");
 const isAskingForForecast_1 = require("../utils/isAskingForForecast");
 const isAskingForPreparation_1 = require("../utils/isAskingForPreparation");
 const isAskingToChangeCity_1 = require("../utils/isAskingToChangeCity");
 const isAskingToExit_1 = require("../utils/isAskingToExit");
-const userProfileService_1 = require("../userProfile/userProfileService");
+const userProfileService_1 = require("../services/userProfileService");
 const CITY_PROMPT = 'CITY_PROMPT';
 const USER_PROFILE = 'USER_PROFILE';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
@@ -85,6 +85,7 @@ class UserProfileDialog extends botbuilder_dialogs_1.ComponentDialog {
             }
             catch (error) {
                 console.error('Error fetching geocoding data:', error);
+                console.log(stepContext.context.sendActivity(` City "${cityName}" not found. Please enter a valid city name.`));
                 yield stepContext.context.sendActivity(` City "${cityName}" not found. Please enter a valid city name.`);
                 return yield stepContext.replaceDialog(WATERFALL_DIALOG);
             }

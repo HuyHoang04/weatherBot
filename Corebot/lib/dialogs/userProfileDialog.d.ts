@@ -1,6 +1,6 @@
 import { StatePropertyAccessor, TurnContext, UserState } from 'botbuilder';
 import { ComponentDialog } from 'botbuilder-dialogs';
-import { WeatherService } from '../weather/weatherService';
+import { WeatherService } from '../services/weatherService';
 export declare class UserProfileDialog extends ComponentDialog {
     private userProfile;
     private weatherService;

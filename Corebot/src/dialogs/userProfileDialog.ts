@@ -9,15 +9,15 @@ import {
     WaterfallDialog,
     WaterfallStepContext
 } from 'botbuilder-dialogs';
-import { UserProfile } from '../userProfile/userProfile';
+import { UserProfile } from '../models/userProfile';
 import { extractCityFromMessage } from '../utils/extractCityFromMessage';
 import { isAskingForCurrentWeather } from '../utils/isAskingForCurrentWeather';
 import { isAskingForForecast } from '../utils/isAskingForForecast';
 import { isAskingForPreparation } from '../utils/isAskingForPreparation';
 import { isAskingToChangeCity } from '../utils/isAskingToChangeCity';
 import { isAskingToExit } from '../utils/isAskingToExit';
-import { WeatherService } from '../weather/weatherService';
-import { UserProfileService } from '../userProfile/userProfileService';
+import { WeatherService } from '../services/weatherService';
+import { UserProfileService } from '../services/userProfileService';
 
 const CITY_PROMPT = 'CITY_PROMPT';
 const USER_PROFILE = 'USER_PROFILE';
@@ -97,6 +97,9 @@ export class UserProfileDialog extends ComponentDialog {
             return stepContext.next();
         } catch (error) {
             console.error('Error fetching geocoding data:', error);
+            console.log(stepContext.context.sendActivity(
+                ` City "${cityName}" not found. Please enter a valid city name.`
+            ));
             await stepContext.context.sendActivity(
                 ` City "${cityName}" not found. Please enter a valid city name.`
             );

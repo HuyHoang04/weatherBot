@@ -1,5 +1,5 @@
-import { UserProfileService } from "../userProfile/userProfileService";
-import { WeatherService } from "../weather/weatherService";
+import { UserProfileService } from "../services/userProfileService";
+import { WeatherService } from "../services/weatherService";
 import { CloudAdapter } from "botbuilder";
 
 export async function sendDailySuggestion(

@@ -18,12 +18,13 @@ import {
 
 import { DialogBot } from './bots/dialogBot';
 import { UserProfileDialog } from './dialogs/userProfileDialog';
-import { Suggestion } from './suggestion/suggestion';
-import { WeatherService } from './weather/weatherService';
-import { UserProfileService } from './userProfile/userProfileService';
+import { Suggestion } from './models/suggestion';
+import { WeatherService } from './services/weatherService';
+import { UserProfileService } from './services/userProfileService';
 import corsMiddleware from 'restify-cors-middleware2';
 import { sendDailySuggestion } from './utils/sendDailySuggestion';
-import { SuggestionService } from './suggestion/suggestionService';
+import { SuggestionService } from './services/suggestionService';
+import { UserActivity } from './models/userActivity';
 
 const ENV_FILE = path.join(__dirname, '..', '.env');
 config({ path: ENV_FILE });
@@ -88,14 +89,14 @@ const bot = new DialogBot(conversationState, userState, dialog, conversationRefe
 
 const server = restify.createServer();
 const cors = corsMiddleware({
-  origins: ['http://127.0.0.1:5500', 'http://localhost:4200', 'http://127.0.0.1:4200'],
+  origins: ['http://127.0.0.1:5500', 'http://localhost:4200', 'http://127.0.0.1:4200', 'https://graph.facebook.com','https://developers.facebook.com/docs/graph-api/webhooks/getting-started/#mtls-for-webhooks'],
   allowHeaders: ['Authorization', 'Content-Type'],
   exposeHeaders: ['Authorization']
 });
 server.pre(cors.preflight);
 server.use(cors.actual);
 server.use(restify.plugins.bodyParser());
-
+server.use(restify.plugins.queryParser());
 
 server.listen(process.env.port || process.env.PORT || 3978, () => {
     console.log(`\n${ server.name } listening to ${ server.url }.`);
@@ -114,12 +115,12 @@ server.on('upgrade', async (req, socket, head) => {
 });
 
 
-cron.schedule('* 14 * * *', async () => {
-    console.log('Running daily weather notification job...');
-    await sendDailySuggestion(weatherService, userProfileService, adapter, conversationReferences);
-}, {
-    timezone: "Asia/Ho_Chi_Minh"
-});
+// cron.schedule('* 14 * * *', async () => {
+//     console.log('Running daily weather notification job...');
+//     await sendDailySuggestion(weatherService, userProfileService, adapter, conversationReferences);
+// }, {
+//     timezone: "Asia/Ho_Chi_Minh"
+// });
 
 
 server.post('/api/messages', (req, res, next) => {
@@ -162,7 +163,6 @@ server.get('/api/suggestions', async (req, res, next) => {
 
 server.post('/api/suggestions', async (req, res, next) => {
     try {
-        console.log('POST /api/suggestions received data:', req.body);
         
         const suggestions: Suggestion[] = req.body;
         if (!Array.isArray(suggestions) || suggestions.length === 0) {
@@ -173,9 +173,7 @@ server.post('/api/suggestions', async (req, res, next) => {
             return;
         }
 
-        console.log('Valid suggestions data, calling saveAll...');
         const result = await suggestionService.saveAll(suggestions);
-        console.log('SaveAll completed with result:', result);
         
         res.setHeader('Content-Type', 'application/json');
         res.writeHead(201);
@@ -184,47 +182,14 @@ server.post('/api/suggestions', async (req, res, next) => {
         console.error('Error saving suggestions:', error);
         res.setHeader('Content-Type', 'application/json');
         res.writeHead(500);
-        res.end(JSON.stringify({ error: 'Failed to save suggestions', details: error.message }));
+        res.end(JSON.stringify({ error: 'Failed to save suggestions'}));
     }
 });
 
-// Test endpoint để tạo dữ liệu mẫu
-server.post('/api/suggestions/test', async (req, res, next) => {
-    try {
-        console.log('Creating test data...');
-        
-        const testSuggestions = [
-            {
-                id: 'test_35',
-                temperature: 35,
-                items: ['Áo thun cotton', 'Quần short', 'Dép xăng đan']
-            },
-            {
-                id: 'test_30', 
-                temperature: 30,
-                items: ['Áo sơ mi', 'Quần jeans', 'Giày sneaker']
-            }
-        ];
 
-        const result = await suggestionService.saveAll(testSuggestions);
-        console.log('Test data created:', result);
-        
-        res.setHeader('Content-Type', 'application/json');
-        res.writeHead(201);
-        res.end(JSON.stringify({ message: 'Test data created', result }));
-    } catch (error) {
-        console.error('Error creating test data:', error);
-        res.setHeader('Content-Type', 'application/json');
-        res.writeHead(500);
-        res.end(JSON.stringify({ error: error.message }));
-    }
-});
-
-// DELETE endpoint để xóa suggestion theo temperature
 server.del('/api/suggestions/:temperature', async (req, res, next) => {
     try {
-        const temperature = parseInt(req.params.temperature);
-        console.log(`DELETE /api/suggestions/${temperature} called`);
+        const temperature = parseInt(req.params.temperature);;
         
         if (isNaN(temperature)) {
             res.setHeader('Content-Type', 'application/json');
@@ -243,8 +208,83 @@ server.del('/api/suggestions/:temperature', async (req, res, next) => {
         console.error('Error deleting suggestion:', error);
         res.setHeader('Content-Type', 'application/json');
         res.writeHead(500);
-        res.end(JSON.stringify({ error: 'Failed to delete suggestion', details: error.message }));
+        res.end(JSON.stringify({ error: 'Failed to delete suggestion' }));
     }
+});
+
+
+server.get("/messaging-webhook", (req, res, next) => {
+  let mode = req.query["hub.mode"] ;
+  let token = req.query["hub.verify_token"] ;
+  let challenge = req.query["hub.challenge"] ;
+
+
+  if (mode && token) {
+    if (mode === "subscribe" && token === process.env.FACEBOOK_VERIFY_TOKEN) {
+      console.log("WEBHOOK_VERIFIED");
+      res.writeHead(200);
+      res.end(challenge);
+    } else {
+      console.log("Verification failed");
+      res.writeHead(403);
+      res.end();
+    }
+  } else {
+    console.log("Missing parameters");
+    res.writeHead(400);
+    res.end();
+  }
+});
+
+server.post("/messaging-webhook", async (req, res, next) => {
+  try {
+    console.log('Facebook message received:', req.body);
+    const activity = new UserActivity;
+    const messagingEvent = req.body.entry[0].messaging[0];
+
+    activity.text = messagingEvent.message?.text || '';
+    activity.type = 'message'; 
+    activity.channelId = req.body.entry[0].id; 
+    activity.locale = 'en-US'; 
+    activity.attachments = [];
+    activity.entities = []; 
+
+    activity.from = {
+        id: messagingEvent.sender.id,
+        name: '', 
+        role: 'user'
+    };
+
+    activity.recipient = {
+        id: messagingEvent.recipient.id,
+        name: '', 
+        role: 'bot' 
+    };
+
+    activity.conversation = {
+        id: messagingEvent.sender.id 
+    };
+
+    activity.timestamp = new Date(messagingEvent.timestamp).toISOString();
+    activity.localTimestamp = new Date().toISOString(); 
+    activity.localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone; 
+
+    activity.channelData = {
+        clientActivityID: messagingEvent.message?.mid || '' 
+    };
+
+    activity.id = `fb_message_${messagingEvent.message?.mid || Date.now()}`; 
+
+    activity.serviceUrl = 'https://facebook.com'; 
+    activity.activity = { id: activity.id }; 
+
+    adapter.process(req, res, async (context) => await bot.run(context));
+    
+    res.writeHead(200);
+  } catch (error) {
+    console.error('Facebook webhook error:', error);
+    res.writeHead(500);
+  }
 });
 
 

@@ -6,6 +6,7 @@ export interface GeocodingResponse {
 }
 export declare class WeatherService {
     private apiKey;
+    private suggestionService;
     constructor();
     getGeocoding(city: string): Promise<GeocodingResponse>;
     getWeatherNow(lat: number, lon: number): Promise<any>;

@@ -40,16 +40,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = require("dotenv");
 const path = __importStar(require("path"));
 const restify = __importStar(require("restify"));
-const cron = __importStar(require("node-cron"));
 const botbuilder_1 = require("botbuilder");
 const dialogBot_1 = require("./bots/dialogBot");
 const userProfileDialog_1 = require("./dialogs/userProfileDialog");
-const suggestion_1 = require("./suggestion/suggestion");
-const weatherService_1 = require("./weather/weatherService");
-const userProfileService_1 = require("./userProfile/userProfileService");
+const suggestion_1 = require("./models/suggestion");
+const weatherService_1 = require("./services/weatherService");
+const userProfileService_1 = require("./services/userProfileService");
 const restify_cors_middleware2_1 = __importDefault(require("restify-cors-middleware2"));
 const sendDailySuggestion_1 = require("./utils/sendDailySuggestion");
-const suggestionService_1 = require("./suggestion/suggestionService");
+const suggestionService_1 = require("./services/suggestionService");
+const userActivity_1 = require("./models/userActivity");
 const ENV_FILE = path.join(__dirname, '..', '.env');
 (0, dotenv_1.config)({ path: ENV_FILE });
 console.log('API Key loaded:', process.env.OPENWEATHER_API_KEY ? `${process.env.OPENWEATHER_API_KEY.substring(0, 8)}...` : 'NOT FOUND');
@@ -84,13 +84,14 @@ const conversationReferences = {};
 const bot = new dialogBot_1.DialogBot(conversationState, userState, dialog, conversationReferences);
 const server = restify.createServer();
 const cors = (0, restify_cors_middleware2_1.default)({
-    origins: ['http://127.0.0.1:5500', 'http://localhost:4200', 'http://127.0.0.1:4200'],
+    origins: ['http://127.0.0.1:5500', 'http://localhost:4200', 'http://127.0.0.1:4200', 'https://graph.facebook.com', 'https://developers.facebook.com/docs/graph-api/webhooks/getting-started/#mtls-for-webhooks'],
     allowHeaders: ['Authorization', 'Content-Type'],
     exposeHeaders: ['Authorization']
 });
 server.pre(cors.preflight);
 server.use(cors.actual);
 server.use(restify.plugins.bodyParser());
+server.use(restify.plugins.queryParser());
 server.listen(process.env.port || process.env.PORT || 3978, () => {
     console.log(`\n${server.name} listening to ${server.url}.`);
     console.log('\nGet Bot Framework Emulator: https://aka.ms/botframework-emulator');
@@ -103,12 +104,12 @@ server.on('upgrade', (req, socket, head) => __awaiter(void 0, void 0, void 0, fu
     streamingAdapter.onTurnError = onTurnErrorHandler;
     yield streamingAdapter.process(req, socket, head, (context) => bot.run(context));
 }));
-cron.schedule('* 14 * * *', () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('Running daily weather notification job...');
-    yield (0, sendDailySuggestion_1.sendDailySuggestion)(weatherService, userProfileService, adapter, conversationReferences);
-}), {
-    timezone: "Asia/Ho_Chi_Minh"
-});
+// cron.schedule('* 14 * * *', async () => {
+//     console.log('Running daily weather notification job...');
+//     await sendDailySuggestion(weatherService, userProfileService, adapter, conversationReferences);
+// }, {
+//     timezone: "Asia/Ho_Chi_Minh"
+// });
 server.post('/api/messages', (req, res, next) => {
     adapter.process(req, res, (context) => __awaiter(void 0, void 0, void 0, function* () { return yield bot.run(context); }));
 });
@@ -146,7 +147,6 @@ server.get('/api/suggestions', (req, res, next) => __awaiter(void 0, void 0, voi
 }));
 server.post('/api/suggestions', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('POST /api/suggestions received data:', req.body);
         const suggestions = req.body;
         if (!Array.isArray(suggestions) || suggestions.length === 0) {
             console.log('Invalid suggestions data - not an array or empty');
@@ -155,9 +155,7 @@ server.post('/api/suggestions', (req, res, next) => __awaiter(void 0, void 0, vo
             res.end(JSON.stringify({ error: 'Invalid suggestions data' }));
             return;
         }
-        console.log('Valid suggestions data, calling saveAll...');
         const result = yield suggestionService.saveAll(suggestions);
-        console.log('SaveAll completed with result:', result);
         res.setHeader('Content-Type', 'application/json');
         res.writeHead(201);
         res.end(JSON.stringify({ message: 'Suggestions saved successfully', result }));
@@ -166,43 +164,13 @@ server.post('/api/suggestions', (req, res, next) => __awaiter(void 0, void 0, vo
         console.error('Error saving suggestions:', error);
         res.setHeader('Content-Type', 'application/json');
         res.writeHead(500);
-        res.end(JSON.stringify({ error: 'Failed to save suggestions', details: error.message }));
+        res.end(JSON.stringify({ error: 'Failed to save suggestions' }));
     }
 }));
-// Test endpoint để tạo dữ liệu mẫu
-server.post('/api/suggestions/test', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        console.log('Creating test data...');
-        const testSuggestions = [
-            {
-                id: 'test_35',
-                temperature: 35,
-                items: ['Áo thun cotton', 'Quần short', 'Dép xăng đan']
-            },
-            {
-                id: 'test_30',
-                temperature: 30,
-                items: ['Áo sơ mi', 'Quần jeans', 'Giày sneaker']
-            }
-        ];
-        const result = yield suggestionService.saveAll(testSuggestions);
-        console.log('Test data created:', result);
-        res.setHeader('Content-Type', 'application/json');
-        res.writeHead(201);
-        res.end(JSON.stringify({ message: 'Test data created', result }));
-    }
-    catch (error) {
-        console.error('Error creating test data:', error);
-        res.setHeader('Content-Type', 'application/json');
-        res.writeHead(500);
-        res.end(JSON.stringify({ error: error.message }));
-    }
-}));
-// DELETE endpoint để xóa suggestion theo temperature
 server.del('/api/suggestions/:temperature', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const temperature = parseInt(req.params.temperature);
-        console.log(`DELETE /api/suggestions/${temperature} called`);
+        ;
         if (isNaN(temperature)) {
             res.setHeader('Content-Type', 'application/json');
             res.writeHead(400);
@@ -219,7 +187,71 @@ server.del('/api/suggestions/:temperature', (req, res, next) => __awaiter(void 0
         console.error('Error deleting suggestion:', error);
         res.setHeader('Content-Type', 'application/json');
         res.writeHead(500);
-        res.end(JSON.stringify({ error: 'Failed to delete suggestion', details: error.message }));
+        res.end(JSON.stringify({ error: 'Failed to delete suggestion' }));
+    }
+}));
+server.get("/messaging-webhook", (req, res, next) => {
+    let mode = req.query["hub.mode"];
+    let token = req.query["hub.verify_token"];
+    let challenge = req.query["hub.challenge"];
+    if (mode && token) {
+        if (mode === "subscribe" && token === process.env.FACEBOOK_VERIFY_TOKEN) {
+            console.log("WEBHOOK_VERIFIED");
+            res.writeHead(200);
+            res.end(challenge);
+        }
+        else {
+            console.log("Verification failed");
+            res.writeHead(403);
+            res.end();
+        }
+    }
+    else {
+        console.log("Missing parameters");
+        res.writeHead(400);
+        res.end();
+    }
+});
+server.post("/messaging-webhook", (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
+    try {
+        console.log('Facebook message received:', req.body);
+        const activity = new userActivity_1.UserActivity;
+        const messagingEvent = req.body.entry[0].messaging[0];
+        activity.text = ((_a = messagingEvent.message) === null || _a === void 0 ? void 0 : _a.text) || '';
+        activity.type = 'message';
+        activity.channelId = req.body.entry[0].id;
+        activity.locale = 'en-US';
+        activity.attachments = [];
+        activity.entities = [];
+        activity.from = {
+            id: messagingEvent.sender.id,
+            name: '',
+            role: 'user'
+        };
+        activity.recipient = {
+            id: messagingEvent.recipient.id,
+            name: '',
+            role: 'bot'
+        };
+        activity.conversation = {
+            id: messagingEvent.sender.id
+        };
+        activity.timestamp = new Date(messagingEvent.timestamp).toISOString();
+        activity.localTimestamp = new Date().toISOString();
+        activity.localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        activity.channelData = {
+            clientActivityID: ((_b = messagingEvent.message) === null || _b === void 0 ? void 0 : _b.mid) || ''
+        };
+        activity.id = `fb_message_${((_c = messagingEvent.message) === null || _c === void 0 ? void 0 : _c.mid) || Date.now()}`;
+        activity.serviceUrl = 'https://facebook.com';
+        activity.activity = { id: activity.id };
+        adapter.process(req, res, (context) => __awaiter(void 0, void 0, void 0, function* () { return yield bot.run(context); }));
+        res.writeHead(200);
+    }
+    catch (error) {
+        console.error('Facebook webhook error:', error);
+        res.writeHead(500);
     }
 }));
 //# sourceMappingURL=index.js.map
